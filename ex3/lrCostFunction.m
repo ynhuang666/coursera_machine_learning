@@ -42,6 +42,9 @@ J = sum(sub_j) / m + ((theta'*theta - theta(1,1)*theta(1,1)) * lambda) / (2*m);
 
 % =============================================================
 
-grad = grad(:);
+% you should not regularize theta_0
+reg_bias = theta .* (lambda / m);
+reg_bias(1,1) = 0;
+grad = (X'*(hx-y))./m + reg_bias;
 
 end
