@@ -24,6 +24,8 @@ Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):en
 
 % Setup some useful variables
 m = size(X, 1);
+% Add the row for bias.
+X = [ones(m, 1) X];
          
 % You need to return the following variables correctly 
 J = 0;
@@ -62,27 +64,40 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+% ------------Calculate the cost.--------------------------
+
+% covert label-based y to vector-based y.
+y1 = zeros(m, num_labels);
+for row = 1:m;
+	y1(row, y(row)) = 1;
+end;
+
+a1 = sigmoid(X * Theta1');
+m_a1 = size(a1, 1);
+hx = sigmoid([ones(m_a1, 1) a1] * Theta2');
+J = (-1.*y1).*log(hx) - (1.-y1).*log(1.-hx);
+J = sum(J(:)) / m;
+J = J + ( ( sum((Theta1.^2)(:)) - sum((Theta1(:,1).^2)(:)) + sum((Theta2.^2)(:)) - sum((Theta2(:,1).^2)(:)) ) * lambda) / (2*m);
 
 
+% ----------------Calculate the gradient.---------------------------------------------
+for t = 1:m;
+	z2 = X(t,:) * Theta1';
+	a2 = sigmoid(z2);
+	m_a2 = size(a2, 1);
+	a3 = sigmoid([ones(m_a2, 1) a2] * Theta2');
+	delta3 = a3.-y1(t,:);
+	delta2 = Theta2'*delta3'.*[ones(m_a2, 1) sigmoidGradient(z2)]';
+	Theta2_grad = Theta2_grad + delta3'*[ones(m_a2, 1) a2];
+	Theta1_grad = Theta1_grad + delta2(2:end)*X(t,:);
+end;
 
+Theta1_grad = Theta1_grad./m;
+Theta2_grad = Theta2_grad./m;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% -------------------------------------------------------------
-
-% =========================================================================
+% ================Add regularization.=========================================================
+Theta1_grad = [Theta1_grad(:,1) Theta1_grad(:,2:end).+(Theta1(:,2:end).*lambda./m)];
+Theta2_grad = [Theta2_grad(:,1) Theta2_grad(:,2:end).+(Theta2(:,2:end).*lambda./m)];
 
 % Unroll gradients
 grad = [Theta1_grad(:) ; Theta2_grad(:)];
